@@ -1,12 +1,10 @@
 {extends file="template.inc"}
 
 {block name=head}
-{*cc_include files="test.js,test.css"*}
-{*cc_include files="img/favicon.ico,usps.css"*}
 {/block}
 
 {block name=body}
-holly1
+Hello
 
 <script>
 'use strict';
