@@ -4,22 +4,23 @@
  * 2. Initialize Smarty object
  * 3. Interpret URL and load template.
  */
-// 1. Setup
+// 1a. Setup enviroment
+//error_reporting(E_ERROR | E_WARNING | E_PARSE); 
+error_reporting(E_ALL|E_STRICT); 
+ini_set('display_errors', '1');
+
+// Remember path to the app implementation directory
 $appPath = dirname(__FILE__).DIRECTORY_SEPARATOR;
 
+// Smarty oversite, in case this isn't set. 
 date_default_timezone_set('America/Los_Angeles');
-// include $appPath.'../Smarty/smarty.class.php';
 
-set_include_path($appPath.'../Smarty');
-// Cheap way to invoke autoload
-function __autoload($class)
-{
-	// Cheap way to implement autoload
-	spl_autoload_extensions(spl_autoload_extensions().',.class.php');
-	spl_autoload($class);
-}
+// Find PHP classes.
+set_include_path($appPath.'../Smarty');	// Include Smarty files
+spl_autoload_extensions(spl_autoload_extensions().',.class.php');
+spl_autoload_register();
 
-// We're doing Smarty
+// 1b. We're doing Smarty
 $smarty = new Smarty();
 
 // In case we want to put tempates in a subdir, called templates
@@ -28,15 +29,13 @@ if (is_dir($appPath.'templates'))
 $smarty->addTemplateDir($appPath);
 // $smarty->setConfigDir($appPath.'configs/');
 
-$umask = umask(0);
+// Set up working directory: $appVarPath
+$umask = umask(0);	// Allow access by diff user
 $appVarPath = $appPath.'var'.DIRECTORY_SEPARATOR;
 if (!is_dir($appVarPath))
-	mkdir($appVarPath, 0777);
-
+	mkdir($appVarPath, 0775);
 if (!is_dir($appVarPath.'templates_c/'))
-	mkdir($appVarPath.'templates_c/', 0777);
-if (!is_dir($appVarPath.'cache/'))
-	mkdir($appVarPath.'cache/', 0777);
+	mkdir($appVarPath.'templates_c/', 0775);
 umask($umask);
 
 $smarty->setCompileDir($appVarPath.'templates_c/');
@@ -63,10 +62,17 @@ if (!isset($urlComponenets[0]) || $urlComponenets[0] == '')		// Default
 	$urlComponenets[0] = 'index';
 
 // 3. Display smarty
-// $smarty->assign('name','Ned');
+// Determine template name based on URL
 $template = $urlComponenets[0].'.tpl';
 if ($smarty->templateExists($template))
+{
+//	$smarty->assign('name','Ned');
 	$smarty->display($template);
+}
+elseif (stream_resolve_include_path($urlComponenets[0].'.php'))
+{
+	include $urlComponenets[0].'.php';
+}
 else
 {
 	header($_SERVER['SERVER_PROTOCOL'].' 404 Not Found', TRUE, 404);
