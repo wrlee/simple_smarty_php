@@ -12,15 +12,14 @@ ini_set('display_errors', '1');
 // Remember path to the app implementation directory
 $appPath = dirname(__FILE__).DIRECTORY_SEPARATOR;
 
-// Smarty oversite, in case this isn't set. 
-date_default_timezone_set('America/Los_Angeles');
-
 // Find PHP classes.
 set_include_path($appPath.'../Smarty');	// Include Smarty files
 spl_autoload_extensions(spl_autoload_extensions().',.class.php');
 spl_autoload_register();
 
 // 1b. We're doing Smarty
+// Smarty oversite, in case this isn't set. 
+date_default_timezone_set('America/Los_Angeles');
 $smarty = new Smarty();
 
 // In case we want to put tempates in a subdir, called templates
@@ -64,17 +63,22 @@ if (!isset($urlComponenets[0]) || $urlComponenets[0] == '')		// Default
 // 3. Display smarty
 // Determine template name based on URL
 $template = $urlComponenets[0].'.tpl';
-if ($smarty->templateExists($template))
+
+if (stream_resolve_include_path($urlComponenets[0].'.php'))
+{
+	include $urlComponenets[0].'.php';
+}
+elseif ($smarty->templateExists($template))
 {
 //	$smarty->assign('name','Ned');
 	$smarty->display($template);
-}
-elseif (stream_resolve_include_path($urlComponenets[0].'.php'))
-{
-	include $urlComponenets[0].'.php';
 }
 else
 {
 	header($_SERVER['SERVER_PROTOCOL'].' 404 Not Found', TRUE, 404);
 	echo "$template not found.";
 }
+// echo '<pre>';
+// print_r($_SERVER);
+// print_r($_ENV);
+// echo '</pre>';
